@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Liquizza</title>
+    <style>
+        #quizContainer {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Liquizza</h1>
+    <input type="file" id="fileInput">
+    <button onclick="caricaFile()">Load and Start Liquizza</button>
+
+    <p><em>Note: Here follows the format of the CSV file:</em></p>
+    <p><em>Question;Response 1;Response 2;Response 3;...;Right Response</em></p>
+
+    <div id="quizContainer" style="display: none;">
+        <h2>Domanda <span id="numeroDomanda"></span> di <span id="totaleDomande"></span>:</h2>
+        <p id="domanda"></p>
+        <h2>Risposte:</h2>
+        <select id="risposteSelect">
+        </select>
+        <p id="rispostaRisultato" style="display: none;"></p>
+        <button onclick="prossimaDomanda()">Next</button>
+    </div>
+
+    <script>
+        let domandeERisposte = [];
+        let indiceDomandaCorrente = 0;
+        let rispostaUtente = null;
+        let startTime = null;
+        let tempoMedio = 0;
+
+        function caricaFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const contenuto = event.target.result;
+                    domandeERisposte = elaboraContenutoCSV(contenuto);
+                    mescolaDomande();
+	            indiceDomandaCorrente = 0; // Reimposta l'indice della domanda corrente
+                    avviaQuiz();
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function elaboraContenutoCSV(contenuto) {
+            const righe = contenuto.split('\n');
+            const domandeERisposte = [];
+            for (const riga of righe) {
+                if (riga.trim() === '') {
+                    continue; // Salta righe vuote
+                }
+                
+                const elementi = riga.split(';');
+                if (elementi.length < 2) {
+                    continue; // Salta righe con meno di 2 elementi
+                }
+
+                const domanda = elementi[0];
+                const risposte = elementi.slice(1, -1);
+                const rispostaCorretta = elementi[elementi.length - 1];
+                risposte.push(rispostaCorretta); // Aggiungi la risposta corretta alle risposte errate
+                domandeERisposte.push({
+                    domanda: domanda,
+                    risposte: risposte,
+                    rispostaCorretta: rispostaCorretta
+                });
+            }
+            return domandeERisposte;
+        }
+
+        function mescolaDomande() {
+            for (let i = domandeERisposte.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [domandeERisposte[i], domandeERisposte[j]] = [domandeERisposte[j], domandeERisposte[i]];
+            }
+        }
+
+        function avviaQuiz() {
+            const quizContainer = document.getElementById('quizContainer');
+            quizContainer.style.display = 'block';
+            mostraDomandaCorrente();
+        }
+
+        function selezionaRisposta(indiceRisposta) {
+            const risposteElement = document.getElementById('risposte');
+            rispostaUtente = indiceRisposta;
+        }
+
+function mostraDomandaCorrente() {
+    const numeroDomandaElement = document.getElementById('numeroDomanda');
+    const totaleDomandeElement = document.getElementById('totaleDomande');
+    const domandaElement = document.getElementById('domanda');
+    const risposteSelect = document.getElementById('risposteSelect');
+    const rispostaRisultatoElement = document.getElementById('rispostaRisultato');
+    rispostaRisultatoElement.style.display = 'none';
+
+    const domandaCorrente = domandeERisposte[indiceDomandaCorrente];
+    numeroDomandaElement.textContent = indiceDomandaCorrente + 1;
+    totaleDomandeElement.textContent = domandeERisposte.length;
+    domandaElement.textContent = domandaCorrente.domanda;
+    
+    // Svuota le opzioni precedenti
+    risposteSelect.innerHTML = '';
+
+    // Aggiungi le opzioni basate sulle risposte della domanda corrente
+    for (let i = 0; i < domandaCorrente.risposte.length; i++) {
+        const rispostaOption = document.createElement('option');
+        rispostaOption.value = i; // Usa l'indice come valore dell'opzione
+        rispostaOption.textContent = domandaCorrente.risposte[i];
+        risposteSelect.appendChild(rispostaOption);
+    }
+
+    startTime = new Date().getTime();
+}
+
+function prossimaDomanda() {
+    const rispostaRisultatoElement = document.getElementById('rispostaRisultato');
+    rispostaRisultatoElement.style.display = 'none';
+
+    const domandaCorrente = domandeERisposte[indiceDomandaCorrente];
+    const risposteSelect = document.getElementById('risposteSelect');
+    const rispostaUtenteIndex = parseInt(risposteSelect.value); // Ottieni l'indice della risposta scelta dall'utente
+
+    if (rispostaUtenteIndex === domandaCorrente.risposte.indexOf(domandaCorrente.rispostaCorretta)) {
+        domandaCorrente.risposte = mescolaRisposte(domandaCorrente.risposte);
+        risposteSelect.selectedIndex = 0; // Reimposta la selezione all'opzione vuota
+        if (indiceDomandaCorrente < domandeERisposte.length - 1) {
+            indiceDomandaCorrente++;
+            mostraDomandaCorrente();
+        } else {
+            const endTime = new Date().getTime();
+            tempoMedio = (endTime - startTime) / domandeERisposte.length;
+
+            let messaggioRisultato = '';
+            if (tempoMedio < 10000) {
+                messaggioRisultato = 'You are a champion!';
+            } else if (tempoMedio >= 10000 && tempoMedio <= 20000) {
+                messaggioRisultato = 'Well done!';
+            } else {
+                messaggioRisultato = 'You can do better.';
+            }
+
+            alert(`${messaggioRisultato} Mean time per answer: ${tempoMedio.toFixed(2)} ms`);
+        }
+    } else {
+        alert('Wrong response. Try again!');
+        domandaCorrente.risposte = mescolaRisposte(domandaCorrente.risposte); // Mischia le risposte, inclusa quella corretta
+        risposteSelect.selectedIndex = 0; // Reimposta la selezione all'opzione vuota
+        mostraDomandaCorrente();
+    }
+}
+
+function mescolaRisposte(risposte) {
+    const risposteMischiate = risposte.slice(); // Crea una copia dell'array delle risposte
+    for (let i = risposteMischiate.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [risposteMischiate[i], risposteMischiate[j]] = [risposteMischiate[j], risposteMischiate[i]]; // Scambia le posizioni casualmente
+    }
+    return risposteMischiate;
+}
+
+    </script>
+</body>
+</html>
