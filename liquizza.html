@@ -10,24 +10,43 @@
 </head>
 <body>
     <h1>Liquizza</h1>
-    <input type="file" id="fileInput">
-    <button onclick="caricaFile()">Load and Start Liquizza</button>
-
-    <p><em>Note: Here follows the format of the CSV file:</em></p>
-    <p><em>Question;Response 1;Response 2;Response 3;...;Right Response</em></p>
 
     <div id="quizContainer" style="display: none;">
         <h2>Domanda <span id="numeroDomanda"></span> di <span id="totaleDomande"></span>:</h2>
         <p id="domanda"></p>
         <h2>Risposte:</h2>
-        <select id="risposteSelect">
-        </select>
+        <div id="risposteContainer">
+            <!-- Opzioni di risposta saranno generate dinamicamente qui -->
+        </div>
         <p id="rispostaRisultato" style="display: none;"></p>
         <button onclick="prossimaDomanda()">Next</button>
     </div>
 
+
+    <p><em>========================================</em></p>
+
+    <input type="file" id="fileInput">
+    <button onclick="caricaFile()">Load and Start Liquizza</button>
+
+    <p><em>.csv file format:</em></p>
+    <p><em>Question;Wrong Response 1;Wrong Response 2;...;;Right Response 1;...</em></p>
+    <p><em></em></p>
+    <p><em>.txt file format:</em></p>
+    <p><em># Comment</em></p>
+    <p><em>Question 1</em></p>
+    <p><em></em></p>
+    <p><em>Right Response 1</em></p>
+    <p><em>...</em></p>
+    <p><em></em></p>
+    <p><em>Wrong Response 1</em></p>
+    <p><em>...</em></p>
+    <p><em></em></p>
+    <p><em>Question 1</em></p>
+    <p><em>...</em></p>
+
     <script>
         let domandeERisposte = [];
+        let domandeMescolate = [];
         let indiceDomandaCorrente = 0;
         let rispostaUtente = null;
         let startTime = null;
@@ -41,7 +60,7 @@
                 reader.onload = function(event) {
                     const contenuto = event.target.result;
                     domandeERisposte = elaboraContenutoCSV(contenuto);
-                    mescolaDomande();
+                    domandeMescolate = mescolaDomande();
 	            indiceDomandaCorrente = 0; // Reimposta l'indice della domanda corrente
                     avviaQuiz();
                 };
@@ -52,35 +71,75 @@
         function elaboraContenutoCSV(contenuto) {
             const righe = contenuto.split('\n');
             const domandeERisposte = [];
+
             for (const riga of righe) {
-                if (riga.trim() === '') {
-                    continue; // Salta righe vuote
+                if (riga.trim() === '' || riga.trim().startsWith('#')) {
+                    continue; // Salta righe vuote e righe che iniziano con #
                 }
-                
+
                 const elementi = riga.split(';');
                 if (elementi.length < 2) {
                     continue; // Salta righe con meno di 2 elementi
                 }
 
                 const domanda = elementi[0];
-                const risposte = elementi.slice(1, -1);
-                const rispostaCorretta = elementi[elementi.length - 1];
-                risposte.push(rispostaCorretta); // Aggiungi la risposta corretta alle risposte errate
+                const risposteErrate = [];
+                const risposteCorrette = [];
+                let isRispostaCorretta = false;
+
+                for (let i = 1; i < elementi.length; i++) {
+                    const risposta = elementi[i].trim();
+
+                    if (risposta === '') {
+                        isRispostaCorretta = true;
+                        continue; // Ignora il campo vuoto, passa alla prossima iterazione
+                    }
+        
+                    if (isRispostaCorretta) {
+                        risposteCorrette.push(risposta);
+                    } else {
+                        risposteErrate.push(risposta);
+                    }
+                }
+
                 domandeERisposte.push({
                     domanda: domanda,
-                    risposte: risposte,
-                    rispostaCorretta: rispostaCorretta
+                    risposteErrate: risposteErrate,
+                    risposteCorrette: risposteCorrette
                 });
             }
-            return domandeERisposte;
-        }
 
-        function mescolaDomande() {
-            for (let i = domandeERisposte.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [domandeERisposte[i], domandeERisposte[j]] = [domandeERisposte[j], domandeERisposte[i]];
-            }
-        }
+            return domandeERisposte;
+        } // elaboraContenutoCSV
+
+function mescolaDomande() {
+    const domandeMescolate = [];
+
+    for (const domandaOriginale of domandeERisposte) {
+        const risposteErrate = domandaOriginale.risposteErrate.slice();
+        const risposteCorrette = domandaOriginale.risposteCorrette.slice();
+
+        // Unisci risposteErrate e risposteCorrette
+        const tutteLeRisposte = risposteErrate.concat(risposteCorrette);
+
+        // Crea un nuovo oggetto con la domanda originale e tutte le risposte
+        const domandaMescolata = {
+            domanda: domandaOriginale.domanda,
+            risposte: tutteLeRisposte
+        };
+
+        domandeMescolate.push(domandaMescolata);
+    }
+
+    // Mescola le domande
+    for (let i = domandeMescolate.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [domandeMescolate[i], domandeMescolate[j]] = [domandeMescolate[j], domandeMescolate[i]];
+        [domandeERisposte[i], domandeERisposte[j]] = [domandeERisposte[j], domandeERisposte[i]];
+    }
+
+    return domandeMescolate;
+} // mescolaDomande
 
         function avviaQuiz() {
             const quizContainer = document.getElementById('quizContainer');
@@ -88,55 +147,65 @@
             mostraDomandaCorrente();
         }
 
-        function selezionaRisposta(indiceRisposta) {
-            const risposteElement = document.getElementById('risposte');
-            rispostaUtente = indiceRisposta;
-        }
-
 function mostraDomandaCorrente() {
     const numeroDomandaElement = document.getElementById('numeroDomanda');
     const totaleDomandeElement = document.getElementById('totaleDomande');
     const domandaElement = document.getElementById('domanda');
-    const risposteSelect = document.getElementById('risposteSelect');
+    const risposteContainer = document.getElementById('risposteContainer');
     const rispostaRisultatoElement = document.getElementById('rispostaRisultato');
     rispostaRisultatoElement.style.display = 'none';
 
-    const domandaCorrente = domandeERisposte[indiceDomandaCorrente];
+    const domandaCorrente = domandeMescolate[indiceDomandaCorrente];
     numeroDomandaElement.textContent = indiceDomandaCorrente + 1;
-    totaleDomandeElement.textContent = domandeERisposte.length;
+    totaleDomandeElement.textContent = domandeMescolate.length;
     domandaElement.textContent = domandaCorrente.domanda;
+
+
+    // Mescola le risposte usando la funzione mescolaRisposte
+    const risposteMischiate = mescolaRisposte(domandaCorrente.risposte);
+
     
     // Svuota le opzioni precedenti
-    risposteSelect.innerHTML = '';
+    risposteContainer.innerHTML = '';
 
-    // Aggiungi le opzioni basate sulle risposte della domanda corrente
-    for (let i = 0; i < domandaCorrente.risposte.length; i++) {
-        const rispostaOption = document.createElement('option');
-        rispostaOption.value = i; // Usa l'indice come valore dell'opzione
-        rispostaOption.textContent = domandaCorrente.risposte[i];
-        risposteSelect.appendChild(rispostaOption);
+    // Aggiungi le opzioni basate sulle risposte mescolate
+    for (const risposta of risposteMischiate) {
+        const rispostaCheckbox = document.createElement('input');
+        rispostaCheckbox.type = 'checkbox';
+        rispostaCheckbox.value = risposta;
+        rispostaCheckbox.name = 'risposta';
+
+        const label = document.createElement('label');
+        label.appendChild(rispostaCheckbox);
+        label.appendChild(document.createTextNode(risposta));
+
+        risposteContainer.appendChild(label);
+	
+        // Aggiungi un line break dopo ogni checkbox
+        risposteContainer.appendChild(document.createElement('br'));
     }
 
     startTime = new Date().getTime();
-}
+} // mostraDomandaCorrente
 
 function prossimaDomanda() {
     const rispostaRisultatoElement = document.getElementById('rispostaRisultato');
     rispostaRisultatoElement.style.display = 'none';
 
-    const domandaCorrente = domandeERisposte[indiceDomandaCorrente];
-    const risposteSelect = document.getElementById('risposteSelect');
-    const rispostaUtenteIndex = parseInt(risposteSelect.value); // Ottieni l'indice della risposta scelta dall'utente
+    const domandaCorrente = domandeMescolate[indiceDomandaCorrente];
+    const risposteContainer = document.getElementById('risposteContainer');
+    const risposteUtente = getRisposteUtente(); // Ottieni le risposte scelte dall'utente
 
-    if (rispostaUtenteIndex === domandaCorrente.risposte.indexOf(domandaCorrente.rispostaCorretta)) {
+    // Controlla se le risposte dell'utente corrispondono alle risposte corrette
+    if (risposteCorrette(risposteUtente)) {
         domandaCorrente.risposte = mescolaRisposte(domandaCorrente.risposte);
-        risposteSelect.selectedIndex = 0; // Reimposta la selezione all'opzione vuota
-        if (indiceDomandaCorrente < domandeERisposte.length - 1) {
+        resetRisposteUtente(); // Reimposta le risposte dell'utente
+        if (indiceDomandaCorrente < domandeMescolate.length - 1) {
             indiceDomandaCorrente++;
             mostraDomandaCorrente();
         } else {
             const endTime = new Date().getTime();
-            tempoMedio = (endTime - startTime) / domandeERisposte.length;
+            tempoMedio = (endTime - startTime) / domandeMescolate.length;
 
             let messaggioRisultato = '';
             if (tempoMedio < 10000) {
@@ -152,8 +221,38 @@ function prossimaDomanda() {
     } else {
         alert('Wrong response. Try again!');
         domandaCorrente.risposte = mescolaRisposte(domandaCorrente.risposte); // Mischia le risposte, inclusa quella corretta
-        risposteSelect.selectedIndex = 0; // Reimposta la selezione all'opzione vuota
+        resetRisposteUtente(); // Reimposta le risposte dell'utente
         mostraDomandaCorrente();
+    }
+}
+
+function risposteCorrette(risposteUtente) {
+    const domandaCorrente = domandeERisposte[indiceDomandaCorrente];
+    
+    // Controlla se le risposte dell'utente corrispondono alle risposte corrette della domanda corrente
+    return domandaCorrente.risposteCorrette.every(rispostaCorretta =>
+        risposteUtente.includes(rispostaCorretta)
+    );
+}
+
+function getRisposteUtente() {
+    const risposteCheckbox = document.getElementsByName('risposta');
+    const risposteUtente = [];
+
+    for (const checkbox of risposteCheckbox) {
+        if (checkbox.checked) {
+            risposteUtente.push(checkbox.value);
+        }
+    }
+
+    return risposteUtente;
+}
+
+function resetRisposteUtente() {
+    const risposteCheckbox = document.getElementsByName('risposta');
+
+    for (const checkbox of risposteCheckbox) {
+        checkbox.checked = false;
     }
 }
 

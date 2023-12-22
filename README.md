@@ -4,7 +4,7 @@
 
 ## Features
 
-- Load custom question sets from CSV files.
+- Load custom question sets from files.
 - Choose the correct answers from multiple options.
 - Receive feedback on your performance, including average response time.
 - Engaging, educational, and fun!
@@ -15,14 +15,13 @@
 2. Open the `index.html` file in your web browser.
 3. Load a CSV question set and start the quiz!
 
-## CSV Format
+## File format 
 
 The CSV file should have the following format:
 
 ```
-Question;Option 1;Option 2;Option 3;...;Correct Option
+Question;Wrong Response 1;Wrong Response 2;...;;Right Response 1;...
 ```
-
 
 ## License
 
