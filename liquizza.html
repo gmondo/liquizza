@@ -52,21 +52,35 @@
         let startTime = null;
         let tempoMedio = 0;
 
-        function caricaFile() {
-            const fileInput = document.getElementById('fileInput');
-            const file = fileInput.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const contenuto = event.target.result;
-                    domandeERisposte = elaboraContenutoCSV(contenuto);
-                    domandeMescolate = mescolaDomande();
-	            indiceDomandaCorrente = 0; // Reimposta l'indice della domanda corrente
-                    avviaQuiz();
-                };
-                reader.readAsText(file);
+function caricaFile() {
+    const fileInput = document.getElementById('fileInput');
+    const file = fileInput.files[0];
+
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            const contenuto = event.target.result;
+            let domandeFormato;
+
+            if (file.name.endsWith('.csv')) {
+                domandeFormato = elaboraContenutoCSV(contenuto);
+            } else if (file.name.endsWith('.txt')) {
+                domandeFormato = elaboraContenutoTXT(contenuto);
+            } else {
+                // Gestione di altri formati o errore
+                console.error('Formato non supportato');
+                return;
             }
-        }
+
+            domandeERisposte = domandeFormato;
+            domandeMescolate = mescolaDomande();
+            indiceDomandaCorrente = 0; // Reimposta l'indice della domanda corrente
+            avviaQuiz();
+        };
+
+        reader.readAsText(file);
+    }
+} // caricaFile
 
         function elaboraContenutoCSV(contenuto) {
             const righe = contenuto.split('\n');
@@ -228,10 +242,14 @@ function prossimaDomanda() {
 
 function risposteCorrette(risposteUtente) {
     const domandaCorrente = domandeERisposte[indiceDomandaCorrente];
-    
-    // Controlla se le risposte dell'utente corrispondono alle risposte corrette della domanda corrente
-    return domandaCorrente.risposteCorrette.every(rispostaCorretta =>
-        risposteUtente.includes(rispostaCorretta)
+    const risposteCorretteDomanda = domandaCorrente.risposteCorrette;
+
+    // Verifica se le risposte dell'utente corrispondono esattamente alle risposte corrette della domanda corrente
+    return (
+        risposteUtente.length === risposteCorretteDomanda.length &&
+        risposteCorretteDomanda.every(rispostaCorretta =>
+            risposteUtente.includes(rispostaCorretta)
+        )
     );
 }
 
