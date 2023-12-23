@@ -12,9 +12,9 @@
     <h1>Liquizza</h1>
 
     <div id="quizContainer" style="display: none;">
-        <h2>Domanda <span id="numeroDomanda"></span> di <span id="totaleDomande"></span>:</h2>
+        <h2>Question <span id="numeroDomanda"></span> of <span id="totaleDomande"></span>:</h2>
         <p id="domanda"></p>
-        <h2>Risposte:</h2>
+        <h2>Select correct answers:</h2>
         <div id="risposteContainer">
             <!-- Opzioni di risposta saranno generate dinamicamente qui -->
         </div>
@@ -26,7 +26,7 @@
     <p><em>========================================</em></p>
 
     <input type="file" id="fileInput">
-    <button onclick="caricaFile()">Load and Start Liquizza</button>
+    <button onclick="caricaFile()">Load</button>
 
     <p><em>.csv file format:</em></p>
     <p><em>Question;Wrong Response 1;Wrong Response 2;...;;Right Response 1;...</em></p>
@@ -35,10 +35,10 @@
     <p><em># Comment</em></p>
     <p><em>Question 1</em></p>
     <p><em></em></p>
-    <p><em>Right Response 1</em></p>
+    <p><em>Wrong Response 1</em></p>
     <p><em>...</em></p>
     <p><em></em></p>
-    <p><em>Wrong Response 1</em></p>
+    <p><em>Right Response 1</em></p>
     <p><em>...</em></p>
     <p><em></em></p>
     <p><em>Question 1</em></p>
@@ -126,6 +126,69 @@ function caricaFile() {
             return domandeERisposte;
         } // elaboraContenutoCSV
 
+function elaboraContenutoTXT(contenuto) {
+    const righe = contenuto.split('\n');
+    const domandeERisposte = [];
+
+    let stato = 'domanda';
+    let domanda = null;
+    let risposteErrate = [];
+    let risposteCorrette = [];
+
+    function aggiungiDomanda() {
+        if (domanda) {
+            domandeERisposte.push({
+		domanda: '<pre>' + domanda.join('<br>') + '</pre>',
+                risposteErrate: risposteErrate,
+                risposteCorrette: risposteCorrette
+            });
+
+            // Resetta lo stato della domanda
+            domanda = null;
+            risposteErrate = [];
+            risposteCorrette = [];
+        }
+    }
+
+    for (const riga of righe) {
+        const rigaTrimmed = riga;
+
+        if (rigaTrimmed.startsWith('#')) {
+            // Ignora commenti
+            continue;
+        } else if (rigaTrimmed === '') {
+            // Passa allo stato successivo
+            if (stato === 'domanda') {
+                stato = 'rispostaerrata';
+            } else if (stato === 'rispostaerrata') {
+                stato = 'rispostacorretta';
+            } else if (stato === 'rispostacorretta') {
+                // Fine delle risposte, aggiungi la domanda
+                stato = 'domanda';
+                aggiungiDomanda();
+            }
+        } else {
+            // Aggiungi la riga al tipo corrente
+            if (stato === 'domanda') {
+                // Inizializza o aggiungi righe alla domanda
+                if (!domanda) {
+                    domanda = [];
+                }
+                domanda.push(rigaTrimmed);
+            } else if (stato === 'rispostaerrata') {
+                risposteErrate.push(rigaTrimmed);
+            } else if (stato === 'rispostacorretta') {
+                risposteCorrette.push(rigaTrimmed);
+            }
+        }
+    }
+
+    // Aggiungi l'ultima domanda se presente
+    aggiungiDomanda();
+
+    return domandeERisposte;
+} // elaboraContenutoTXT
+
 function mescolaDomande() {
     const domandeMescolate = [];
 
@@ -172,7 +235,7 @@ function mostraDomandaCorrente() {
     const domandaCorrente = domandeMescolate[indiceDomandaCorrente];
     numeroDomandaElement.textContent = indiceDomandaCorrente + 1;
     totaleDomandeElement.textContent = domandeMescolate.length;
-    domandaElement.textContent = domandaCorrente.domanda;
+    domandaElement.innerHTML = domandaCorrente.domanda;
 
 
     // Mescola le risposte usando la funzione mescolaRisposte

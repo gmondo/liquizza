@@ -1,0 +1,21 @@
+What of the following is true: 
+Input->Processing->Feedback--->
+            ^               | 
+            |---Output<------
+
+Processing should be instead of Feedback
+Input should be instead of Output
+
+# A comment before the right response
+Feedback should be instead of Output
+
+# A comment before the second answer
+A new big question
+standing on multiple lines.
+What is true:
+
+The world is flat
+The sun rotare around the world
+
+The moon rotate around the world
+The world rotate around the sun
