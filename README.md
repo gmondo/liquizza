@@ -1,6 +1,8 @@
 # Liquizza
 
-"Liquizza" is a collaborative quiz app created by ChatGPT and gmondo. Test your knowledge, answer questions, and enjoy an interactive quiz experience.
+Liquizza is a quiz app created by ChatGPT and gmondo. 
+
+Test your knowledge, answer questions, and enjoy an interactive quiz experience.
 
 ## Features
 
@@ -11,17 +13,41 @@
 
 ## Getting Started
 
-1. Clone this repository to your local machine.
-2. Open the `index.html` file in your web browser.
-3. Load a CSV question set and start the quiz!
+1. Connect to https://raw.githack.com/gmondo/liquizza/main/liquizza.html
+2. Download a sample and personalize it
+3. Upload your personalized sample and start the quiz! 
 
-## File format 
+## File formats
 
-The CSV file should have the following format:
+Liquizza support two textual files:
+
+* .csv with the following format:
 
 ```
+# Comment
 Question;Wrong Response 1;Wrong Response 2;...;;Right Response 1;...
 ```
+
+Please note the void field between wrong and right responses.
+
+* .txt that allows questions on multiple lines with the following format:
+
+```
+# Comment
+Question 1 on two
+lines
+
+Wrong Response 1
+...
+
+Right Response 1
+...
+
+Question 2
+...
+```
+
+Here the separator between questions and responses is a void line.
 
 ## License
 

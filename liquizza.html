@@ -3,8 +3,8 @@
 <head>
     <title>Liquizza</title>
     <style>
-        #quizContainer {
-            display: none;
+        body {
+            font-family: 'Arial', sans-serif;
         }
     </style>
 </head>
@@ -22,27 +22,14 @@
         <button onclick="prossimaDomanda()">Next</button>
     </div>
 
-
     <p><em>========================================</em></p>
 
     <input type="file" id="fileInput">
     <button onclick="caricaFile()">Load</button>
 
-    <p><em>.csv file format:</em></p>
-    <p><em>Question;Wrong Response 1;Wrong Response 2;...;;Right Response 1;...</em></p>
-    <p><em></em></p>
-    <p><em>.txt file format:</em></p>
-    <p><em># Comment</em></p>
-    <p><em>Question 1</em></p>
-    <p><em></em></p>
-    <p><em>Wrong Response 1</em></p>
-    <p><em>...</em></p>
-    <p><em></em></p>
-    <p><em>Right Response 1</em></p>
-    <p><em>...</em></p>
-    <p><em></em></p>
-    <p><em>Question 1</em></p>
-    <p><em>...</em></p>
+    <p><em>sample files:</em></p>
+    <p><a href="sample.csv" download>Download sample.csv</a></p>
+    <p><a href="sample.txt" download>Download sample.txt</a></p>
 
     <script>
         let domandeERisposte = [];
