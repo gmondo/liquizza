@@ -38,6 +38,7 @@
         let rispostaUtente = null;
         let startTime = null;
         let tempoMedio = 0;
+	let numeroErrori = 0;
 
 function caricaFile() {
     const fileInput = document.getElementById('fileInput');
@@ -208,6 +209,8 @@ function mescolaDomande() {
         function avviaQuiz() {
             const quizContainer = document.getElementById('quizContainer');
             quizContainer.style.display = 'block';
+            startTime = new Date().getTime();
+	    numeroErrori = 0;
             mostraDomandaCorrente();
         }
 
@@ -248,8 +251,6 @@ function mostraDomandaCorrente() {
         // Aggiungi un line break dopo ogni checkbox
         risposteContainer.appendChild(document.createElement('br'));
     }
-
-    startTime = new Date().getTime();
 } // mostraDomandaCorrente
 
 function prossimaDomanda() {
@@ -272,17 +273,20 @@ function prossimaDomanda() {
             tempoMedio = (endTime - startTime) / domandeMescolate.length;
 
             let messaggioRisultato = '';
-            if (tempoMedio < 10000) {
-                messaggioRisultato = 'You are a champion!';
-            } else if (tempoMedio >= 10000 && tempoMedio <= 20000) {
-                messaggioRisultato = 'Well done!';
-            } else {
+	    if (numeroErrori == 0) {
+	        if (tempoMedio < 120000) {
+                    messaggioRisultato = 'You are a champion!';
+		} else {
+                    messaggioRisultato = 'Well done, go faster.';
+		}
+	    } else {
                 messaggioRisultato = 'You can do better.';
             }
 
-            alert(`${messaggioRisultato} Mean time per answer: ${tempoMedio.toFixed(2)} ms`);
+	    alert(`${messaggioRisultato} ${numeroErrori} errors, mean time per answer: ${tempoMedio.toFixed(2)} ms`);
         }
     } else {
+        numeroErrori++;
         alert('Wrong response. Try again!');
         domandaCorrente.risposte = mescolaRisposte(domandaCorrente.risposte); // Mischia le risposte, inclusa quella corretta
         resetRisposteUtente(); // Reimposta le risposte dell'utente
