@@ -138,13 +138,17 @@ function elaboraContenutoTXT(contenuto) {
         }
     }
 
+    prevRiga = null;
     for (const riga of righe) {
-        const rigaTrimmed = riga;
+        const rigaTrimmed = riga.trim();
 
         if (rigaTrimmed.startsWith('#')) {
             // Ignora commenti
             continue;
         } else if (rigaTrimmed === '') {
+	    if (prevRiga === rigaTrimmed) {
+	        continue;
+	    }
             // Passa allo stato successivo
             if (stato === 'domanda') {
                 stato = 'rispostaerrata';
@@ -162,13 +166,14 @@ function elaboraContenutoTXT(contenuto) {
                 if (!domanda) {
                     domanda = [];
                 }
-                domanda.push(rigaTrimmed);
+                domanda.push(riga);
             } else if (stato === 'rispostaerrata') {
-                risposteErrate.push(rigaTrimmed);
+                risposteErrate.push(riga);
             } else if (stato === 'rispostacorretta') {
-                risposteCorrette.push(rigaTrimmed);
+                risposteCorrette.push(riga);
             }
         }
+	prevRiga = rigaTrimmed;
     }
 
     // Aggiungi l'ultima domanda se presente

@@ -3,13 +3,15 @@ Input->Processing->Feedback--->
             ^               | 
             |---Output<------
 
+# This is a comment: void lines divides questions from wrong answers
+
 Processing should be instead of Feedback
 Input should be instead of Output
 
-# A comment before the right response
+# a void line to distinguish right answers 
 Feedback should be instead of Output
 
-# A comment before the second answer
+# another void line for a new question and so on 
 A new big question
 standing on multiple lines.
 What is true:
