@@ -70,49 +70,39 @@ function caricaFile() {
     }
 } // caricaFile
 
-        function elaboraContenutoCSV(contenuto) {
-            const righe = contenuto.split('\n');
-            const domandeERisposte = [];
+function elaboraContenutoCSV(contenuto) {
+    const righe = contenuto.split('\n');
+    const domandeERisposte = [];
 
-            for (const riga of righe) {
-                if (riga.trim() === '' || riga.trim().startsWith('#')) {
-                    continue; // Salta righe vuote e righe che iniziano con #
-                }
+    for (const riga of righe) {
+        if (riga.trim() === '' || riga.trim().startsWith('#')) {
+            continue; // Salta righe vuote e righe che iniziano con #
+        }
 
-                const elementi = riga.split(';');
-                if (elementi.length < 2) {
-                    continue; // Salta righe con meno di 2 elementi
-                }
+        const elementi = riga.split('|');
+        if (elementi.length < 3) {
+            continue; // Salta righe con meno di 3 elementi (domanda, numero risposte errate, almeno una risposta)
+        }
 
-                const domanda = elementi[0];
-                const risposteErrate = [];
-                const risposteCorrette = [];
-                let isRispostaCorretta = false;
+        const domanda = elementi[0].trim();
+        const numeroRisposteErrate = parseInt(elementi[1].trim(), 10);
 
-                for (let i = 1; i < elementi.length; i++) {
-                    const risposta = elementi[i].trim();
+        if (isNaN(numeroRisposteErrate) || numeroRisposteErrate < 0) {
+            continue; // Salta righe con un numero di risposte errate non valido
+        }
 
-                    if (risposta === '') {
-                        isRispostaCorretta = true;
-                        continue; // Ignora il campo vuoto, passa alla prossima iterazione
-                    }
-        
-                    if (isRispostaCorretta) {
-                        risposteCorrette.push(risposta);
-                    } else {
-                        risposteErrate.push(risposta);
-                    }
-                }
+        const risposteErrate = elementi.slice(2, 2 + numeroRisposteErrate).map(r => r.trim());
+        const risposteCorrette = elementi.slice(2 + numeroRisposteErrate).map(r => r.trim());
 
-                domandeERisposte.push({
-                    domanda: domanda,
-                    risposteErrate: risposteErrate,
-                    risposteCorrette: risposteCorrette
-                });
-            }
+        domandeERisposte.push({
+            domanda: domanda,
+            risposteErrate: risposteErrate,
+            risposteCorrette: risposteCorrette
+        });
+    }
 
-            return domandeERisposte;
-        } // elaboraContenutoCSV
+    return domandeERisposte;
+} // elaboraContenutoCSV
 
 function elaboraContenutoTXT(contenuto) {
     const righe = contenuto.split('\n');
@@ -158,6 +148,15 @@ function elaboraContenutoTXT(contenuto) {
                 // Fine delle risposte, aggiungi la domanda
                 stato = 'domanda';
                 aggiungiDomanda();
+            }
+        } else if (riga.startsWith(' ')) {
+            // Gestisci righe che iniziano con uno spazio come continuazione della riga precedente
+            if (stato === 'domanda' && domanda) {
+                domanda[domanda.length - 1] += '<br>' + rigaTrimmed;
+            } else if (stato === 'rispostaerrata' && risposteErrate.length > 0) {
+	    risposteErrate[risposteErrate.length - 1] += ' ' + rigaTrimmed;
+            } else if (stato === 'rispostacorretta' && risposteCorrette.length > 0) {
+	    risposteCorrette[risposteCorrette.length - 1] += ' ' + rigaTrimmed;
             }
         } else {
             // Aggiungi la riga al tipo corrente
