@@ -25,10 +25,8 @@ Liquizza support two textual files:
 
 ```
 # Comment
-Question;Wrong Response 1;Wrong Response 2;...;;Right Response 1;...
+Question|number of wrong responses n|Wrong Response 1|...|Wrong Response n|Right Response 1|...
 ```
-
-Please note the void field between wrong and right responses.
 
 * .txt that allows questions on multiple lines with the following format:
 
@@ -40,7 +38,8 @@ lines
 Wrong Response 1
 ...
 
-Right Response 1
+Right Response 1 on two
+ lines (with a blank as first character)
 ...
 
 Question 2
