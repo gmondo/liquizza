@@ -17,7 +17,7 @@ standing on multiple lines.
 What is true:
 
 The world is flat
-The sun rotare around the world
+The sun rotate around the world
 
 The moon rotate around the world
 The world rotate around the sun
